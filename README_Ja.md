@@ -64,46 +64,57 @@ job_type :command, ":task :output"
 job_type :rake,    "cd :path && :environment_variable=:environment bundle exec rake :task --silent :output"
 job_type :runner,  "cd :path && bin/rails runner -e :environment ':task' :output"
 job_type :script,  "cd :path && :environment_variable=:environment bundle exec script/:task :output"
-Pre-Rails 3 apps and apps that don't use Bundler will redefine the rake and runner jobs respectively to function correctly.
+Pre-Railsの3つのアプリとアプリを正しく機能するには、Bundlerを再定義してrakeとrunner jobsをそれぞれで使わないでください、
 
-If a :path is not set it will default to the directory in which whenever was executed. :environment_variable will default to 'RAILS_ENV'. :environment will default to 'production'. :output will be replaced with your output redirection settings which you can read more about here: http://github.com/javan/whenever/wiki/Output-redirection-aka-logging-your-cron-jobs
+もし:pathがセットされずに、デフォルトのディレクトリを実行した場合は、
+:environment_variable デフォルトでproductionが設定されます。
+また:outputの出力リダイレクトの置き換えについては、更にここの詳細を読むことができます。
+here: http://github.com/javan/whenever/wiki/Output-redirection-aka-logging-your-cron-jobs
 
-All jobs are by default run with bash -l -c 'command...'. Among other things, this allows your cron jobs to play nice with RVM by loading the entire environment instead of cron's somewhat limited environment. Read more: http://blog.scoutapp.com/articles/2010/09/07/rvm-and-cron-in-production
+すべてのジョブはデフォルトで
+bash -l -c 'command...'.で走査します。
+とりわけ、このcronジョブはいい働きができ、RVMのcronは限定された環境の代わりに
+環境内の全体を読み込むことができます。
 
-You can change this by setting your own :job_template.
+詳細はこちら: http://blog.scoutapp.com/articles/2010/09/07/rvm-and-cron-in-production
 
+あなた自身の:job_templateの設定を変更できます。
 set :job_template, "bash -l -c ':job'"
-Or set the job_template to nil to have your jobs execute normally.
+もしくはjob_templateをnilからあなたのジョブを正常に実行できます。
 
 set :job_template, nil
-Capistrano integration
+Capistrano 統合
 
-Use the built-in Capistrano recipe for easy crontab updates with deploys. For Capistrano V3, see the next section.
+Capistranoのbuilt-inは、更新やデプロイ、crontabも簡単に扱えます。
+CapistranoのV3を対象に、次の項目を見ていきましょう。
 
-In your "config/deploy.rb" file:
-
+では、あなたの"config/deploy.rb"ファイル：
 require "whenever/capistrano"
-Take a look at the recipe for options you can set. https://github.com/javan/whenever/blob/master/lib/whenever/capistrano/v2/recipes.rb For example, if you're using bundler do this:
+設定できるオプションをレシピから見てみましょう。
+https://github.com/javan/whenever/blob/master/lib/whenever/capistrano/v2/recipes.rb 参考例として、もしbundlerを使用しているならこちら
 
 set :whenever_command, "bundle exec whenever"
 require "whenever/capistrano"
-If you are using different environments (such as staging, production), then you may want to do this:
+もし異なる環境(staging、productionといった)を使っているのなら、あなたはこれを実行できます。
 
 set :whenever_environment, defer { stage }
 require "whenever/capistrano"
-The capistrano variable :stage should be the one holding your environment name. This will make the correct :environment available in your schedule.rb.
+Capistranoの貴重な:stageは、お使いの環境名を保持していなければなりません。この:environmentで利用可能なschedule.rbを正しく実行できます。
 
-If both your environments are on the same server you'll want to namespace them or they'll overwrite each other when you deploy:
+もしどちらの環境も同じサーバーであれば、namespaceか上書きすることでdeployできます。
+
 
 set :whenever_environment, defer { stage }
 set :whenever_identifier, defer { "#{application}_#{stage}" }
 require "whenever/capistrano"
-Capistrano V3 Integration
+Capistrano V3 統合
 
-In your "Capfile" file:
+"Capfile" ファイルについて:
 
 require "whenever/capistrano"
-Take a look at the load:defaults (bottom of file) task for options you can set. https://github.com/javan/whenever/blob/master/lib/whenever/capistrano/v3/tasks/whenever.rake. For example, to namespace the crontab entries by application and stage do this.
+
+load:defaults (ファイル内の底)に設定できるオプションタスクがあるので見てみましょう。  https://github.com/javan/whenever/blob/master/lib/whenever/capistrano/v3/tasks/whenever.rake. 参考例、namespaceから
+For example, to namespace the crontab entries by application and stage do this.
 
 In your in "config/deploy.rb" file:
 
